@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ blog.title }}</title>
+    <link rel="stylesheet" href="/libs/semantic-ui/dist/semantic.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/libs/jquery/dist/jquery.js" charset="utf-8"></script>
+    <script src="/libs/semantic-ui/semantic.js" charset="utf-8"></script>
+  </head>
+  <body>
+    {% include "components/nav" %}
+    {% include "components/nav-setting" %}
+    {% include "components/notification" %}
+    {% block body %}{% endblock %}
+    <script type="text/javascript">
+      // 点击按钮弹出下拉框
+      $('.ui.dropdown').dropdown()
+      // 鼠标悬浮在头像上，弹出气泡提示框
+      $('.post-content avatar').popup({
+        inline: true,
+        position: 'bottom right',
+        lastResort: 'bottom right'
+      })
+    </script>
+  </body>
+</html>

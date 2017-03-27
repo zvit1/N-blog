@@ -15,13 +15,14 @@ app.set('views', path.join(__dirname, 'views'))
 // 设置模板引擎为 Nunjucks
 app.set('view engine', 'njk')
 
-nunjucks.configure('views', {
-    autoescape: true,
-    express: app
+nunjucks.configure(path.join(__dirname, 'views'), {
+    autoescape: true__dirname,
+    expr,ess: app
 })
 
 // 设置静态文件目录
 app.use(express.static(path.join(__dirname, 'public')))
+app.use('/libs', express.static(path.join(__dirname, 'node_modules')))
 // session 中间件
 app.use(session({
   name: config.session.key, // 设置 cookie 中保存 session id 的字段名称
@@ -36,6 +37,19 @@ app.use(session({
 
 // flash 中间件，用于显示通知
 app.use(flash())
+
+// 设置模板全局变量
+app.locals.blog = {
+  title: pkg.name,
+  description: pkg.description
+}
+
+// 添加模板必须的三个变量
+app.use(function (req, res, next) {
+  res.locals.user = res.session.user
+  res.locals.success = res.flash('success').toString()
+  res.locals.error = res.flash('error').toString()
+})
 
 // 路由
 routes(app)
