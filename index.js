@@ -1,6 +1,7 @@
 var path = require('path')
 var express = require('express')
 var session =require('express-session')
+var formidable = require('express-formidable')
 var MongoStore = require('connect-mongo')(session)
 var flash = require('connect-flash')
 var config = require('config-lite')
@@ -16,8 +17,8 @@ app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'njk')
 
 nunjucks.configure(path.join(__dirname, 'views'), {
-    autoescape: true__dirname,
-    expr,ess: app
+    autoescape: true,
+    express: app
 })
 
 // 设置静态文件目录
@@ -38,6 +39,12 @@ app.use(session({
 // flash 中间件，用于显示通知
 app.use(flash())
 
+// 处理表单及文件上传的中间件
+app.use(formidable({
+  uploadDir: path.join(__dirname, 'public/img'), //上传文件目录
+  keepExtensions: true // 保留后缀
+}))
+
 // 设置模板全局变量
 app.locals.blog = {
   title: pkg.name,
@@ -46,9 +53,10 @@ app.locals.blog = {
 
 // 添加模板必须的三个变量
 app.use(function (req, res, next) {
-  res.locals.user = res.session.user
-  res.locals.success = res.flash('success').toString()
-  res.locals.error = res.flash('error').toString()
+  res.locals.user = req.session.user
+  res.locals.success = req.flash('success').toString()
+  res.locals.error = req.flash('error').toString()
+  next()
 })
 
 // 路由
@@ -56,5 +64,5 @@ routes(app)
 
 // 监听端口，启动程序
 app.listen(config.port, function () {
-  console.log(`${pkg.name} listening on port ${config.port}`)
+  console.log(`--------------------${pkg.name} listening on port ${config.port}--------------------`)
 })

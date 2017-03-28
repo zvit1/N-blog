@@ -8,12 +8,12 @@
     <link rel="stylesheet" href="/libs/semantic-ui/dist/semantic.min.css">
     <link rel="stylesheet" href="/css/style.css">
     <script src="/libs/jquery/dist/jquery.js" charset="utf-8"></script>
-    <script src="/libs/semantic-ui/semantic.js" charset="utf-8"></script>
+    <script src="/libs/semantic-ui/dist/semantic.js" charset="utf-8"></script>
   </head>
   <body>
-    {% include "components/nav" %}
-    {% include "components/nav-setting" %}
-    {% include "components/notification" %}
+    {% include "./components/nav.njk" %}
+    {% include "./components/nav-setting.njk" %}
+    {% include "./components/notification.njk" %}
     {% block body %}{% endblock %}
     <script type="text/javascript">
       // 点击按钮弹出下拉框
