@@ -11,6 +11,12 @@ router.get('/', function (req, res, next) {
 
   postManager.getPosts(author)
     .then(function (posts) {
+      // 处理一下数据
+      posts = posts.map(function (post, index) {
+        post.author.title = post.author.name ? post.author.name : ({m: '男', f: '女', x: '保密'})[post.author.gender] // 得到文章作者的标题
+        post.isAuthor = req.session.user && post.author._id && req.session.user._id === post.author._id.toString() // 判断当前文章的作者是不是登陆的用户
+        return post
+      })
       res.render('posts', {
         posts: posts
       })
@@ -44,12 +50,20 @@ router.post('/', checkLogin, function (req, res, next) {
     pv: 0
   }
 
-  postManager.create(post, function (result) {
-    // result 是插入 MongoDB 后的文档，包含 _id 属性
-    req.flash('success', '发表成功')
-    // 发表成功后跳转到该文章页
-    res.redirect(`/posts/${result._id}`)
-  })
+  postManager.create(post).then(
+    function (result) {
+      // result 是插入 MongoDB 后的文档，包含 _id 属性
+      req.flash('success', '发表成功')
+      // 发表成功后跳转到该文章页
+      res.redirect(`/posts/${result._id}`)
+    },
+    function (err) {
+      if (err) {
+        req.flash('error', '发表失败')
+        res.redirect('/posts')
+      }
+    }
+  )
 })
 
 // GET /posts/create 发表文章页
@@ -59,7 +73,23 @@ router.get('/create', checkLogin, function (req, res, next) {
 
 // GET /posts/:postId 单独一篇文章页
 router.get('/:postId', function (req, res, next) {
-  res.send(req.flash())
+  var postId = req.params.postId
+
+  Promise.all([
+    postManager.getPostById(postId), // 获取文章信息
+    postManager.incPv(postId) // pv 加 1
+  ])
+  .then(function (result) {
+    var post = result[0]
+    if (!post) {
+      throw new Error('该文章不存在')
+    }
+
+    res.render('post', {
+      post: post
+    })
+  })
+  .catch(next)
 })
 
 // GET /posts/:postId/edit 更新文章页

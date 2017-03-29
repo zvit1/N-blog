@@ -58,23 +58,27 @@ router.post('/', checkNotLogin, function (req, res, next) {
   }
 
   // 用户信息写入数据库
-  userManager.create(user, function (err, result) {
+  userManager.create(user).then(
+    function (result) {
     // 返回的 result 信息是 MongoDB 的值，包含了 _id
-    if (err) {
-      req.flash('error', err)
-      res.redirect('/signup')
-    }
     // 将用户信息存入 session
     delete result.password
 
-    req.session.user = user
+    req.session.user = result
 
     // 写入 flash
     req.flash('success', '注册成功')
 
     // 跳转到首页
     res.redirect('/posts')
-  })
+    },
+    function (err) {
+      if (err) {
+        req.flash('error', err)
+        res.redirect('/signup')
+      }
+    }
+  )
 })
 
 module.exports = router
