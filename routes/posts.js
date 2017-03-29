@@ -2,21 +2,59 @@ var express = require('express')
 var router = express.Router()
 
 var checkLogin = require('../middlewares/check').checkLogin
+var postManager = require('../models/posts')
 
 // GET /posts 所有用户或者特定用户的文章页
 // eg: GET /posts?author=xxx
 router.get('/', function (req, res, next) {
-  res.render('posts')
+  var author = req.query.author
+
+  postManager.getPosts(author)
+    .then(function (posts) {
+      res.render('posts', {
+        posts: posts
+      })
+    })
+    .catch(next)
 })
 
 // POST /posts 发表一篇文章
 router.post('/', checkLogin, function (req, res, next) {
-  res.send(req.flash())
+  var author = req.session.user._id
+  var title = req.fields.title
+  var content = req.fields.content
+
+  // 校验参数
+  try {
+    if (!title.length) {
+      throw new Error('请填写标题')
+    }
+    if (!content.length) {
+      throw new Error('请填写内容')
+    }
+  } catch (e) {
+    req.flash('error', e.message)
+    return res.redirect('back')
+  }
+
+  var post = {
+    author: author,
+    title: title,
+    content: content,
+    pv: 0
+  }
+
+  postManager.create(post, function (result) {
+    // result 是插入 MongoDB 后的文档，包含 _id 属性
+    req.flash('success', '发表成功')
+    // 发表成功后跳转到该文章页
+    res.redirect(`/posts/${result._id}`)
+  })
 })
 
 // GET /posts/create 发表文章页
 router.get('/create', checkLogin, function (req, res, next) {
-  res.send(req.flash())
+  res.render('create')
 })
 
 // GET /posts/:postId 单独一篇文章页

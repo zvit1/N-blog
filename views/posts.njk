@@ -1,5 +1,7 @@
 {% extends "html.njk" %}
 
 {% block body %}
-  这是我的主页
+  {% for post in posts %}
+    {% include "./components/post-content.njk" %}
+  {% endfor %}
 {% endblock %}
