@@ -3,6 +3,7 @@ var router = express.Router()
 
 var checkLogin = require('../middlewares/check').checkLogin
 var postManager = require('../models/posts')
+var commentsManager = require('../models/comments')
 
 // GET /posts 所有用户或者特定用户的文章页
 // eg: GET /posts?author=xxx
@@ -85,6 +86,9 @@ router.get('/:postId', function (req, res, next) {
       throw new Error('该文章不存在')
     }
 
+    post.author.title = post.author.name ? post.author.name : ({m: '男', f: '女', x: '保密'})[post.author.gender] // 得到文章作者的标题
+    post.isAuthor = req.session.user && post.author._id && req.session.user._id === post.author._id.toString() // 判断当前文章的作者是不是登陆的用户
+
     res.render('post', {
       post: post
     })
@@ -94,18 +98,49 @@ router.get('/:postId', function (req, res, next) {
 
 // GET /posts/:postId/edit 更新文章页
 router.get('/:postId/edit', checkLogin, function (req, res, next) {
-  res.send(req.flash())
+  var postId = req.params.postId
+  var author = req.session.user._id
+
+  postManager.getPostById(postId)
+    .then(function (post) {
+      if (!post) {
+        throw new Error('该文章不存在')
+      }
+      if (author.toString() !== post.author._id.toString()) {
+        throw new Error('权限不足')
+      }
+
+      res.render('edit', { post: post })
+    })
+    .catch(next)
 })
 
 // POST /posts/:postId/edit 更新一篇文章
 router.post('/:postId/edit', checkLogin, function (req, res, next) {
-  res.send(req.flash())
-})
+  var postId = req.params.postId
+  var author = req.session.user._id
+  var title = req.fields.title
+  var content = req.fields.content
 
+  postManager.updatePostById(postId, author, { title: title, content: content })
+    .then(function () {
+      req.flash('success', '编辑文章成功')
+      res.redirect(`/posts/${postId}`)
+    })
+    .catch(next)
+})
 
 // GET /posts/:postId/remove 删除一篇文章
 router.get('/:postId/remove', checkLogin, function (req, res, next) {
-  res.send(req.flash())
+  var postId = req.params.postId
+  var author = req.session.user._id
+
+  postManager.delPostById(postId, author)
+    .then(function () {
+      req.flash('success', '删除文章成功')
+      res.redirect('/posts')
+    })
+    .catch(next)
 })
 
 // POST /posts/:postId/comment 创建一条留言
