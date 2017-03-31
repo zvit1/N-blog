@@ -78,19 +78,25 @@ router.get('/:postId', function (req, res, next) {
 
   Promise.all([
     postManager.getPostById(postId), // 获取文章信息
+    commentsManager.getComments(postId), // 获取文章留言
     postManager.incPv(postId) // pv 加 1
   ])
   .then(function (result) {
     var post = result[0]
+    var comments = result[1]
     if (!post) {
       throw new Error('该文章不存在')
     }
 
     post.author.title = post.author.name ? post.author.name : ({m: '男', f: '女', x: '保密'})[post.author.gender] // 得到文章作者的标题
     post.isAuthor = req.session.user && post.author._id && req.session.user._id === post.author._id.toString() // 判断当前文章的作者是不是登陆的用户
+    comments.forEach(function (comment) {
+      comment.isCommentAuthor = req.session.user && comment.author && req.session.user._id === comment.author._id.toString() // 判断留言作者是不是登陆的用户
+    })
 
     res.render('post', {
-      post: post
+      post: post,
+      comments: comments
     })
   })
   .catch(next)
@@ -145,12 +151,36 @@ router.get('/:postId/remove', checkLogin, function (req, res, next) {
 
 // POST /posts/:postId/comment 创建一条留言
 router.post('/:postId/comment', checkLogin, function (req, res, next) {
-  res.send(req.flash())
+  var author = req.session.user._id
+  var postId = req.params.postId
+  var content = req.fields.content
+  var comment = {
+    author: author,
+    postId: postId,
+    content: content
+  }
+
+  commentsManager.create(comment)
+    .then(function () {
+      req.flash('success', '留言成功')
+      // 留言成功后跳转到上一页
+      res.redirect('back')
+    })
+    .catch(next)
 })
 
 // GET /posts/:postId/comment/:commentId/remove 删除一条留言
-router.post('/:postId/comment/:commentId/remove', checkLogin, function (req, res, next) {
-  res.send(req.flash())
+router.get('/:postId/comment/:commentId/remove', checkLogin, function (req, res, next) {
+  var commentId = req.params.commentId
+  var author = req.session.user._id
+
+  commentsManager.delCommentById(commentId, author)
+    .then(function () {
+      req.flash('success', '删除留言成功')
+      // 删除成功后跳转到上一页
+      res.redirect('back')
+    })
+    .catch(next)
 })
 
 module.exports = router

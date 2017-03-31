@@ -4,7 +4,7 @@ module.exports = {
   // 创建一个留言
   create: function (comment) {
     var commentDocument = new CommentModel(comment)
-    return commentDocument.save().exec()
+    return commentDocument.save()
   },
 
   // 通过用户 id 和留言 id 删除一个留言

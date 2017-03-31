@@ -2,20 +2,28 @@ var PostModel = require('../lib/mongo').PostModel
 var commentsManager = require('./comments')
 
 // 写一个函数，将查找文章得到的 promise 实例添加 commentsCount 后再返回新的 promise
-// function addCommentsCount (promise) {
-//   return promise.then(function (posts) {
-//     // 如果是一个数组说明是在进行多文档查询，否则是在进行单文档查询 ( 分别对应 getPosts 和 getPostById )
-//     if (Object.prototype.toString.apply(posts) === '[object Array]') {
-//
-//     } else {
-//       var post = posts
-//       commentsManager.getCommentsCount(post._id)
-//         .then(function (count) {
-//
-//         })
-//     }
-//   })
-// }
+async function addCommentsCount (postPromise) {
+  // 得到文章
+  let posts = await postPromise.catch((err) => { console.error(err) })
+
+  // 判断是一篇文章还是多篇文章，数组就是多篇，对象就是一篇，之后为 post 添加字段 commentsCount
+  if (Object.prototype.toString.apply(posts) === '[object Array]') {
+    let commentsPromise = posts.map(function (post) {
+      return commentsManager.getCommentsCount(post._id).catch((err) => { console.error(err) })
+    })
+    let commentsCounts = await Promise.all(commentsPromise).catch((err) => { console.error(err) })
+    posts.forEach(function (post, i) {
+      post.commentsCount = commentsCounts[i]
+    })
+    return posts
+  } else {
+    let post = posts // 只有一篇文章
+    let commentsCount = await commentsManager.getCommentsCount(post._id).catch((err) => { console.error(err) })
+
+    post.commentsCount = commentsCount
+    return post
+  }
+}
 
 module.exports = {
   // 创建一篇文章
@@ -27,10 +35,13 @@ module.exports = {
 
   // 通过文章 id 获取一篇文章
   getPostById: function (postId) {
-    return PostModel
-      .findOne({ _id: postId })
-      .populate('author', 'name bio avatar gender _id', 'UserModel')
-      .exec()
+    // 添加文章的评论数后 return 一个 promise 出去
+    return addCommentsCount(
+      PostModel
+        .findOne({ _id: postId })
+        .populate('author', 'name bio avatar gender _id', 'UserModel')
+        .exec()
+    )
   },
 
   // 按创建时间降序获取所有用户文章或者某个特定用户的所有文章
@@ -40,11 +51,14 @@ module.exports = {
       query.author = author
     }
 
-    return PostModel
-      .find(query)
-      .populate('author', 'name bio avatar gender _id', 'UserModel')
-      .sort({ _id: -1 })
-      .exec()
+    // 添加文章的评论数后 return 一个 promise 出去
+    return addCommentsCount(
+      PostModel
+        .find(query)
+        .populate('author', 'name bio avatar gender _id', 'UserModel')
+        .sort({ _id: -1 })
+        .exec()
+    )
   },
 
   // 通过文章 id 给 pv 加 1

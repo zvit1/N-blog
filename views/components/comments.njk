@@ -15,18 +15,18 @@
               <div class="metadata">
                 <span class="date">{{ comment.createdAt }}</span>
               </div>
-              <div class="text">{{ comment.content }}</div>
+              <div class="text">{{ comment.htmlString | safe }}</div>
 
-              <% if (user && comment.author._id && user._id.toString() === comment.author._id.toString()) { %>
+              {% if comment.isCommentAuthor %}
                 <div class="actions">
-                  <a class="reply" href="/posts/<%= post._id %>/comment/<%= comment._id %>/remove">删除</a>
+                  <a class="reply" href={{ '/posts/' + post._id + '/comment/' + comment._id + '/remove' }}>删除</a>
                 </div>
-              <% } %>
+              {% endif %}
             </div>
           </div>
         {% endfor %}
 
-        {% if user) %}
+        {% if user %}
           <form class="ui reply form" method="post" action={{ '/posts/' + post._id + '/comment' }}>
             <div class="field">
               <textarea name="content"></textarea>
