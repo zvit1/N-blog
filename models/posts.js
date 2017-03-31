@@ -4,21 +4,25 @@ var commentsManager = require('./comments')
 // 写一个函数，将查找文章得到的 promise 实例添加 commentsCount 后再返回新的 promise
 async function addCommentsCount (postPromise) {
   // 得到文章
-  let posts = await postPromise.catch((err) => { console.error(err) })
+  const posts = await postPromise.catch((err) => { console.error(err) })
 
   // 判断是一篇文章还是多篇文章，数组就是多篇，对象就是一篇，之后为 post 添加字段 commentsCount
   if (Object.prototype.toString.apply(posts) === '[object Array]') {
-    let commentsPromise = posts.map(function (post) {
-      return commentsManager.getCommentsCount(post._id).catch((err) => { console.error(err) })
+    const commentsPromise = posts.map(function (post) {
+      return commentsManager
+        .getCommentsCount(post._id)
+        .catch((err) => {
+          console.error(err)
+        })
     })
-    let commentsCounts = await Promise.all(commentsPromise).catch((err) => { console.error(err) })
+    const commentsCounts = await Promise.all(commentsPromise).catch((err) => { console.error(err) })
     posts.forEach(function (post, i) {
       post.commentsCount = commentsCounts[i]
     })
     return posts
   } else {
-    let post = posts // 只有一篇文章
-    let commentsCount = await commentsManager.getCommentsCount(post._id).catch((err) => { console.error(err) })
+    const post = posts // 只有一篇文章
+    const commentsCount = await commentsManager.getCommentsCount(post._id).catch((err) => { console.error(err) })
 
     post.commentsCount = commentsCount
     return post

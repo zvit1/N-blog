@@ -13,7 +13,7 @@ router.get('/', function (req, res, next) {
   postManager.getPosts(author)
     .then(function (posts) {
       // 处理一下数据
-      posts = posts.map(function (post, index) {
+      posts = posts.map(function (post) {
         post.author.title = post.author.name ? post.author.name : ({m: '男', f: '女', x: '保密'})[post.author.gender] // 得到文章作者的标题
         post.isAuthor = req.session.user && post.author._id && req.session.user._id === post.author._id.toString() // 判断当前文章的作者是不是登陆的用户
         return post
