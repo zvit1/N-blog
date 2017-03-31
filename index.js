@@ -96,7 +96,12 @@ app.use(function (err, req, res, next) {
   })
 })
 
-// 监听端口，启动程序
-app.listen(config.port, function () {
-  console.log(`--------------------${pkg.name} listening on port ${config.port}--------------------`)
-})
+// 根据 index.js 是直接运行还是被 require 判断是在测试还是运行 ( 单元测试没写好，暂时写不来 )
+if (module.parent) {
+  module.exports = app
+} else {
+  // 监听端口，启动程序
+  app.listen(config.port, function () {
+    console.log(`--------------------${pkg.name} listening on port ${config.port}--------------------`)
+  })
+}

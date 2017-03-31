@@ -12,6 +12,7 @@ router.get('/', function (req, res, next) {
 
   postManager.getPosts(author)
     .then(function (posts) {
+      console.log(posts, '===============')
       // 处理一下数据
       posts = posts.map(function (post) {
         post.author.title = post.author.name ? post.author.name : ({m: '男', f: '女', x: '保密'})[post.author.gender] // 得到文章作者的标题
