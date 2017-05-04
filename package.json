@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A practice of a Node.js blog.",
   "scripts": {
-    "test": "mocha --harmony test"
+    "start": "supervisor index.js"
   },
   "main": "index.js",
   "author": "zvit",
@@ -28,5 +28,8 @@
     "supertest": "^3.0.0",
     "winston": "^2.3.1",
     "xss": "^0.3.3"
+  },
+  "devDependencies": {
+    "supervisor": "^0.12.0"
   }
 }
